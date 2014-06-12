@@ -38,6 +38,14 @@
 #     Defaults to /var/cache/keystone.
 #   [memcache_servers] List of memcache servers/ports. Optional. Used with
 #     token_driver keystone.token.backends.memcache.Token.  Defaults to false.
+#   [cache_backend] Cache backend module. It is recommended that Memcache (dogpile.cache.memcache) 
+#     or Redis (dogpile.cache.redis) be used in production deployments. Defaults to 
+#     'dogpile.cache.memcached'
+#   [cache_use_key_mangler] If a key-mangling function (sha1) to ensure fixed length
+#     cache-keys should be enabled. Defaults to 'true'.
+#   [cache_backend_argument] Arguments supplied to the backend module. Defaults to 'url:127.0.0.1'.
+#   [cache_enabled] Global toggle for all caching using the should_cache_fn mechanism.
+#     Defaults to 'true'.
 #   [enabled] If the keystone services should be enabled. Optional. Default to true.
 #   [sql_connection] Url used to connect to database.
 #   [idle_timeout] Timeout when db connections should be reaped.
@@ -214,6 +222,10 @@ class keystone(
   $ssl_cert_subject      = '/C=US/ST=Unset/L=Unset/O=Unset/CN=localhost',
   $cache_dir             = '/var/cache/keystone',
   $memcache_servers      = false,
+  $cache_backend         = 'dogpile.cache.memcached',
+  $cache_use_key_mangler = 'true',
+  $cache_backend_argument = 'url:127.0.0.1',
+  $cache_enabled         = 'true',
   $enabled               = true,
   $sql_connection        = 'sqlite:////var/lib/keystone/keystone.db',
   $idle_timeout          = '200',
@@ -379,6 +391,12 @@ class keystone(
     validate_array($memcache_servers)
     keystone_config {
       'memcache/servers': value => join($memcache_servers, ',');
+    }
+    keystone_config {
+      'cache/backend':   value => $cache_backend;
+      'cache/use_key_mangler': value => $cache_use_key_mangler;
+      'cache/backend_argument': value => $cache_backend_argument;
+      'cache/enabled': value => $cache_enabled;
     }
   } else {
     keystone_config {
